@@ -1,12 +1,31 @@
 import type { ReactNode } from "react";
 
-type Props = {
+type CardProps = {
   children: ReactNode;
+  className?: string;
 };
 
-export default function Card({ children }: Props) {
+export default function Card({
+  children,
+  className = "",
+}: CardProps) {
   return (
-    <div className="rounded-3xl border border-white/10 bg-white/5 p-6 backdrop-blur-xl shadow-2xl transition hover:border-indigo-500/40">
+    <div
+      className={`
+      rounded-3xl
+      border
+      border-white/10
+     bg-[#111827]/70
+      backdrop-blur-xl
+      shadow-2xl
+      transition-all
+      duration-300
+      hover:border-violet-500/60
+      hover:shadow-violet-500/20
+      hover:-translate-y-1
+      ${className}
+    `}
+    >
       {children}
     </div>
   );
