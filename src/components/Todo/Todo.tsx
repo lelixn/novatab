@@ -1,4 +1,9 @@
-import Card from "../../components/common/Card";
+import { ClipboardList } from "lucide-react";
+
+import Widget from "../common/widget/Widget";
+import WidgetHeader from "../common/widget/WidgetHeader";
+import WidgetBody from "../common/widget/WidgetBody";
+
 import TodoInput from "./TodoInput";
 import TodoItem from "./TodoItem";
 import { useTodo } from "./useTodo";
@@ -12,36 +17,34 @@ export default function Todo() {
   } = useTodo();
 
   return (
-    <Card className="p-6">
+    <Widget>
 
-      <h2
-        className="mb-6 text-2xl text-violet-300"
-        style={{
-          fontFamily: "Pixelify Sans",
-        }}
-      >
-        TASKS
-      </h2>
+      <WidgetHeader
+        title="TASKS"
+        icon={<ClipboardList size={22} />}
+      />
 
-      <TodoInput onAdd={addTodo} />
+      <WidgetBody>
 
-      <div className="mt-6 space-y-3">
+        <TodoInput onAdd={addTodo} />
 
-        {todos.map((todo) => (
-          <TodoItem
-            key={todo.id}
-            todo={todo}
-            onDelete={() =>
-              removeTodo(todo.id)
-            }
-            onToggle={() =>
-              toggleTodo(todo.id)
-            }
-          />
-        ))}
+        <div className="mt-5 space-y-3">
 
-      </div>
+          {todos.map((todo) => (
 
-    </Card>
+            <TodoItem
+              key={todo.id}
+              todo={todo}
+              onDelete={() => removeTodo(todo.id)}
+              onToggle={() => toggleTodo(todo.id)}
+            />
+
+          ))}
+
+        </div>
+
+      </WidgetBody>
+
+    </Widget>
   );
 }

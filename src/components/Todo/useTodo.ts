@@ -1,5 +1,6 @@
-import { useEffect, useState } from "react";
-import { Todo } from "./todo.types";
+import { useEffect, useState, type SetStateAction } from "react";
+declare const chrome: any;
+import type { Todo } from "./todo.types";
 
 const STORAGE_KEY = "nova-todos";
 
@@ -7,7 +8,7 @@ export function useTodo() {
   const [todos, setTodos] = useState<Todo[]>([]);
 
   useEffect(() => {
-    chrome.storage.local.get([STORAGE_KEY], (result) => {
+    chrome.storage.local.get([STORAGE_KEY], (result: { [x: string]: SetStateAction<Todo[]>; }) => {
       if (result[STORAGE_KEY]) {
         setTodos(result[STORAGE_KEY]);
       }

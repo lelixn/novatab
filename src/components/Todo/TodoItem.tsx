@@ -1,6 +1,6 @@
 import { Trash2 } from "lucide-react";
 import { motion } from "framer-motion";
-import { Todo } from "./todo.types";
+import type { Todo } from "./todo.types";
 
 interface Props {
   todo: Todo;
