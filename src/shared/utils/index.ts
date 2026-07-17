@@ -1,6 +1,7 @@
 import { type ClassValue, clsx } from 'clsx';
 import { twMerge } from 'tailwind-merge';
 import type { TodoPriority } from '@shared/types';
+export { chromeNotify, chromeStorage, chromeAlarm } from './chrome';
 
 // Tailwind class merger
 export const cn = (...inputs: ClassValue[]): string => twMerge(clsx(inputs));

@@ -9,7 +9,7 @@ import type { WeatherData } from '@shared/types';
 // Header Component
 // ============================================
 export const Header: React.FC = () => {
-  const { setSearchOpen } = useUIStore();
+  const { setSearchOpen, setActiveView } = useUIStore();
   const { settings } = useSettingsStore();
   const [time, setTime] = useState(new Date());
   const [weather, setWeather] = useState<WeatherData | null>(null);
@@ -138,6 +138,7 @@ export const Header: React.FC = () => {
         {/* Profile Avatar */}
         <motion.button
           className="nova-btn"
+          onClick={() => setActiveView('settings')}
           style={{
             width: 34,
             height: 34,

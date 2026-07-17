@@ -24,7 +24,7 @@ import type { NavView } from '@shared/types';
 interface NavItem {
   id: NavView;
   label: string;
-  icon: React.FC<{ size?: number; className?: string }>;
+  icon: React.ComponentType<{ size?: number; className?: string; style?: React.CSSProperties }>;
   badge?: string | number;
   color?: string;
 }
