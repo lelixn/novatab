@@ -1,0 +1,59 @@
+{
+  "manifest_version": 3,
+  "name": "NOVA://OS — Developer Cockpit",
+  "version": "1.0.0",
+  "description": "Your cyberpunk developer cockpit. Tasks, Pomodoro, GitHub, LeetCode, Terminal snippets & more.",
+  "author": "NOVA Team",
+  "homepage_url": "https://novaos.dev",
+  "icons": {
+    "16": "icons/icon16.png",
+    "32": "icons/icon32.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
+  },
+  "chrome_url_overrides": {
+    "newtab": "index.html"
+  },
+  "permissions": [
+    "storage",
+    "notifications",
+    "alarms",
+    "tabs",
+    "bookmarks",
+    "identity",
+    "geolocation"
+  ],
+  "host_permissions": [
+    "https://*.openweathermap.org/*",
+    "https://api.github.com/*",
+    "https://leetcode.com/*",
+    "https://*.novaos.dev/*"
+  ],
+  "commands": {
+    "_execute_action": {
+      "suggested_key": {
+        "default": "Alt+Shift+N"
+      }
+    },
+    "open-search": {
+      "suggested_key": {
+        "default": "Ctrl+K",
+        "mac": "Command+K"
+      },
+      "description": "Open Universal Search"
+    }
+  },
+  "background": {
+    "service_worker": "src/background/service-worker.ts",
+    "type": "module"
+  },
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'"
+  },
+  "web_accessible_resources": [
+    {
+      "resources": ["assets/*", "icons/*", "fonts/*"],
+      "matches": ["<all_urls>"]
+    }
+  ]
+}

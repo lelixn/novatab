@@ -1,37 +1,701 @@
 @import "tailwindcss";
 
-:root{
-  --bg:#070B1D;
-  --card:#111827;
-  --border:rgba(255,255,255,.08);
-  --purple:#9D4EDD;
-  --blue:#42A5F5;
-  --green:#00E676;
-  --orange:#FF9100;
+/* ============================================
+   NOVA://OS — Global Design System
+   Cyberpunk Pixel Developer Workspace
+   ============================================ */
+
+/* --- Custom Fonts --- */
+@layer base {
+  :root {
+    /* Brand Colors */
+    --nova-purple: #a855f7;
+    --nova-purple-dim: #7c3aed;
+    --nova-blue: #3b82f6;
+    --nova-cyan: #06b6d4;
+    --nova-pink: #ec4899;
+    --nova-green: #10b981;
+    --nova-yellow: #f59e0b;
+    --nova-red: #ef4444;
+    --nova-orange: #f97316;
+
+    /* Background Layers */
+    --bg-void: #020408;
+    --bg-deep: #060c14;
+    --bg-dark: #0a1020;
+    --bg-card: #0d1526;
+    --bg-card-hover: #111c30;
+    --bg-glass: rgba(13, 21, 38, 0.8);
+    --bg-glass-light: rgba(168, 85, 247, 0.05);
+
+    /* Borders */
+    --border-subtle: rgba(168, 85, 247, 0.12);
+    --border-glow: rgba(168, 85, 247, 0.4);
+    --border-bright: rgba(168, 85, 247, 0.8);
+
+    /* Text */
+    --text-primary: #e2e8f0;
+    --text-secondary: #94a3b8;
+    --text-muted: #475569;
+    --text-accent: #a855f7;
+    --text-code: #06b6d4;
+
+    /* Sidebar */
+    --sidebar-width: 220px;
+    --sidebar-collapsed: 68px;
+
+    /* Glow Effects */
+    --glow-purple: 0 0 20px rgba(168, 85, 247, 0.4), 0 0 60px rgba(168, 85, 247, 0.15);
+    --glow-blue: 0 0 20px rgba(59, 130, 246, 0.4), 0 0 60px rgba(59, 130, 246, 0.15);
+    --glow-cyan: 0 0 20px rgba(6, 182, 212, 0.4), 0 0 60px rgba(6, 182, 212, 0.15);
+
+    /* Transitions */
+    --transition-fast: 150ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-smooth: 300ms cubic-bezier(0.4, 0, 0.2, 1);
+    --transition-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+
+  * {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+  }
+
+  html {
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    text-rendering: optimizeLegibility;
+  }
+
+  body {
+    font-family: 'Space Grotesk', system-ui, sans-serif;
+    background-color: var(--bg-void);
+    color: var(--text-primary);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 4px;
+    height: 4px;
+  }
+
+  ::-webkit-scrollbar-track {
+    background: var(--bg-deep);
+  }
+
+  ::-webkit-scrollbar-thumb {
+    background: var(--border-glow);
+    border-radius: 2px;
+  }
+
+  ::-webkit-scrollbar-thumb:hover {
+    background: var(--nova-purple);
+  }
+
+  /* Typography */
+  .font-pixel {
+    font-family: 'Pixelify Sans', monospace;
+    letter-spacing: 0.05em;
+  }
+
+  .font-mono {
+    font-family: 'JetBrains Mono', monospace;
+  }
+
+  .font-body {
+    font-family: 'Space Grotesk', sans-serif;
+  }
+
+  /* Selection */
+  ::selection {
+    background: rgba(168, 85, 247, 0.3);
+    color: var(--text-primary);
+  }
 }
 
-*{
-  margin:0;
-  padding:0;
-  box-sizing:border-box;
+/* ============================================
+   ANIMATED BACKGROUND SYSTEM
+   ============================================ */
+@layer components {
+  .nova-background {
+    position: fixed;
+    inset: 0;
+    z-index: 0;
+    overflow: hidden;
+    background: radial-gradient(
+        ellipse 80% 50% at 50% -20%,
+        rgba(120, 40, 200, 0.25) 0%,
+        transparent 60%
+      ),
+      radial-gradient(
+        ellipse 60% 40% at 80% 100%,
+        rgba(30, 60, 180, 0.2) 0%,
+        transparent 60%
+      ),
+      linear-gradient(180deg, #020408 0%, #060c14 40%, #040810 100%);
+  }
+
+  /* Stars Canvas */
+  .nova-stars {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(1px 1px at 10% 15%, rgba(255, 255, 255, 0.8) 0%, transparent 100%),
+      radial-gradient(1px 1px at 25% 35%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 40% 8%, rgba(255, 255, 255, 0.9) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 20%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 70% 45%, rgba(255, 255, 255, 0.7) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 85% 12%, rgba(255, 255, 255, 0.8) 0%, transparent 100%),
+      radial-gradient(1px 1px at 15% 60%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 30% 75%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+      radial-gradient(2px 2px at 65% 65%, rgba(168, 85, 247, 0.8) 0%, transparent 100%),
+      radial-gradient(1px 1px at 90% 30%, rgba(255, 255, 255, 0.7) 0%, transparent 100%),
+      radial-gradient(1px 1px at 5% 90%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 45% 85%, rgba(59, 130, 246, 0.9) 0%, transparent 100%),
+      radial-gradient(1px 1px at 75% 80%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+      radial-gradient(2px 2px at 20% 5%, rgba(6, 182, 212, 0.8) 0%, transparent 100%),
+      radial-gradient(1px 1px at 95% 70%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+      radial-gradient(1px 1px at 50% 55%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 35% 48%, rgba(255, 255, 255, 0.7) 0%, transparent 100%),
+      radial-gradient(1px 1px at 62% 38%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 78% 22%, rgba(168, 85, 247, 0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 92% 55%, rgba(255, 255, 255, 0.6) 0%, transparent 100%);
+    animation: twinkle 8s infinite alternate;
+  }
+
+  .nova-stars-2 {
+    position: absolute;
+    inset: 0;
+    background-image: radial-gradient(1px 1px at 18% 28%, rgba(255, 255, 255, 0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 43% 62%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+      radial-gradient(2px 2px at 60% 18%, rgba(168, 85, 247, 0.7) 0%, transparent 100%),
+      radial-gradient(1px 1px at 82% 72%, rgba(255, 255, 255, 0.5) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 7% 45%, rgba(59, 130, 246, 0.7) 0%, transparent 100%),
+      radial-gradient(1px 1px at 28% 88%, rgba(255, 255, 255, 0.4) 0%, transparent 100%),
+      radial-gradient(1px 1px at 55% 95%, rgba(255, 255, 255, 0.3) 0%, transparent 100%),
+      radial-gradient(1px 1px at 88% 42%, rgba(255, 255, 255, 0.7) 0%, transparent 100%),
+      radial-gradient(1.5px 1.5px at 12% 72%, rgba(6, 182, 212, 0.6) 0%, transparent 100%),
+      radial-gradient(1px 1px at 38% 15%, rgba(255, 255, 255, 0.8) 0%, transparent 100%);
+    animation: twinkle 12s infinite alternate-reverse;
+  }
+
+  /* Pixel City Silhouette */
+  .nova-city {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    height: 180px;
+    background: 
+      /* Buildings row */
+      linear-gradient(to right,
+        transparent 0%, transparent 2%,
+        #020810 2%, #020810 4%,
+        transparent 4%, transparent 5%,
+        #020810 5%, #020810 7%,
+        transparent 7%, transparent 8%,
+        #020810 8%, #020810 12%,
+        transparent 12%, transparent 13%,
+        #020810 13%, #020810 16%,
+        transparent 16%, transparent 18%,
+        #020810 18%, #020810 22%,
+        transparent 22%, transparent 24%,
+        #020810 24%, #020810 26%,
+        transparent 26%, transparent 27%,
+        #020810 27%, #020810 32%,
+        transparent 32%, transparent 34%,
+        #020810 34%, #020810 38%,
+        transparent 38%, transparent 40%,
+        #020810 40%, #020810 43%,
+        transparent 43%, transparent 45%,
+        #020810 45%, #020810 50%,
+        transparent 50%, transparent 51%,
+        #020810 51%, #020810 54%,
+        transparent 54%, transparent 56%,
+        #020810 56%, #020810 60%,
+        transparent 60%, transparent 62%,
+        #020810 62%, #020810 66%,
+        transparent 66%, transparent 68%,
+        #020810 68%, #020810 72%,
+        transparent 72%, transparent 73%,
+        #020810 73%, #020810 78%,
+        transparent 78%, transparent 80%,
+        #020810 80%, #020810 84%,
+        transparent 84%, transparent 86%,
+        #020810 86%, #020810 90%,
+        transparent 90%, transparent 92%,
+        #020810 92%, #020810 96%,
+        transparent 96%, transparent 100%
+      );
+    mask-image: linear-gradient(to top, black 60%, transparent 100%);
+    opacity: 0.8;
+  }
+
+  /* Moon */
+  .nova-moon {
+    position: absolute;
+    top: 8%;
+    right: 12%;
+    width: 70px;
+    height: 70px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 35% 35%, #f0e6ff, #c4a8ff 40%, #8b5cf6 80%, #6d28d9);
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 80px rgba(168, 85, 247, 0.2);
+    animation: moonPulse 6s ease-in-out infinite;
+  }
+
+  .nova-moon::after {
+    content: '';
+    position: absolute;
+    top: 15%;
+    left: 20%;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.15);
+  }
+
+  /* Floating Particles */
+  .nova-particle {
+    position: absolute;
+    border-radius: 50%;
+    animation: float linear infinite;
+    pointer-events: none;
+  }
+
+  /* Grid Overlay */
+  .nova-grid {
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(168, 85, 247, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(168, 85, 247, 0.03) 1px, transparent 1px);
+    background-size: 40px 40px;
+    mask-image: radial-gradient(ellipse 100% 100% at 50% 50%, black 30%, transparent 80%);
+  }
+
+  /* ============================================
+     CARD SYSTEM
+     ============================================ */
+  .nova-card {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    transition: border-color var(--transition-smooth), box-shadow var(--transition-smooth), transform var(--transition-smooth);
+  }
+
+  .nova-card:hover {
+    border-color: var(--border-glow);
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.1), 0 8px 32px rgba(0, 0, 0, 0.4);
+    transform: translateY(-1px);
+  }
+
+  .nova-card-glow {
+    background: var(--bg-glass);
+    border: 1px solid var(--border-glow);
+    border-radius: 12px;
+    backdrop-filter: blur(20px);
+    box-shadow: var(--glow-purple);
+  }
+
+  /* ============================================
+     BUTTON SYSTEM
+     ============================================ */
+  .nova-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 8px 16px;
+    border-radius: 8px;
+    font-family: 'Space Grotesk', sans-serif;
+    font-weight: 500;
+    font-size: 0.875rem;
+    letter-spacing: 0.01em;
+    cursor: pointer;
+    transition: all var(--transition-fast);
+    border: none;
+    outline: none;
+    text-decoration: none;
+    white-space: nowrap;
+    user-select: none;
+  }
+
+  .nova-btn:focus-visible {
+    ring: 2px solid var(--nova-purple);
+    ring-offset: 2px;
+  }
+
+  .nova-btn-primary {
+    background: linear-gradient(135deg, var(--nova-purple-dim), var(--nova-purple));
+    color: white;
+    box-shadow: 0 0 20px rgba(168, 85, 247, 0.3);
+  }
+
+  .nova-btn-primary:hover {
+    box-shadow: 0 0 30px rgba(168, 85, 247, 0.5);
+    transform: translateY(-1px);
+  }
+
+  .nova-btn-ghost {
+    background: transparent;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+  }
+
+  .nova-btn-ghost:hover {
+    background: var(--bg-glass-light);
+    border-color: var(--border-glow);
+    color: var(--text-primary);
+  }
+
+  .nova-btn-danger {
+    background: rgba(239, 68, 68, 0.15);
+    color: #ef4444;
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .nova-btn-danger:hover {
+    background: rgba(239, 68, 68, 0.25);
+    box-shadow: 0 0 20px rgba(239, 68, 68, 0.2);
+  }
+
+  /* ============================================
+     INPUT SYSTEM
+     ============================================ */
+  .nova-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(6, 12, 20, 0.8);
+    border: 1px solid var(--border-subtle);
+    border-radius: 8px;
+    color: var(--text-primary);
+    font-family: 'Space Grotesk', sans-serif;
+    font-size: 0.875rem;
+    transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+    outline: none;
+  }
+
+  .nova-input:focus {
+    border-color: var(--nova-purple);
+    box-shadow: 0 0 0 3px rgba(168, 85, 247, 0.15);
+  }
+
+  .nova-input::placeholder {
+    color: var(--text-muted);
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.8rem;
+  }
+
+  /* ============================================
+     BADGE SYSTEM
+     ============================================ */
+  .nova-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 20px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.7rem;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+  }
+
+  .nova-badge-purple {
+    background: rgba(168, 85, 247, 0.15);
+    color: var(--nova-purple);
+    border: 1px solid rgba(168, 85, 247, 0.3);
+  }
+
+  .nova-badge-cyan {
+    background: rgba(6, 182, 212, 0.15);
+    color: var(--nova-cyan);
+    border: 1px solid rgba(6, 182, 212, 0.3);
+  }
+
+  .nova-badge-green {
+    background: rgba(16, 185, 129, 0.15);
+    color: var(--nova-green);
+    border: 1px solid rgba(16, 185, 129, 0.3);
+  }
+
+  .nova-badge-red {
+    background: rgba(239, 68, 68, 0.15);
+    color: var(--nova-red);
+    border: 1px solid rgba(239, 68, 68, 0.3);
+  }
+
+  .nova-badge-yellow {
+    background: rgba(245, 158, 11, 0.15);
+    color: var(--nova-yellow);
+    border: 1px solid rgba(245, 158, 11, 0.3);
+  }
+
+  /* ============================================
+     GLOW TEXT EFFECTS
+     ============================================ */
+  .glow-text-purple {
+    color: var(--nova-purple);
+    text-shadow: 0 0 20px rgba(168, 85, 247, 0.8), 0 0 40px rgba(168, 85, 247, 0.4);
+  }
+
+  .glow-text-cyan {
+    color: var(--nova-cyan);
+    text-shadow: 0 0 20px rgba(6, 182, 212, 0.8), 0 0 40px rgba(6, 182, 212, 0.4);
+  }
+
+  /* ============================================
+     LAYOUT
+     ============================================ */
+  .nova-layout {
+    display: flex;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+  }
+
+  .nova-sidebar {
+    width: var(--sidebar-width);
+    min-height: 100vh;
+    flex-shrink: 0;
+    display: flex;
+    flex-direction: column;
+    background: rgba(6, 12, 20, 0.85);
+    border-right: 1px solid var(--border-subtle);
+    backdrop-filter: blur(30px);
+    -webkit-backdrop-filter: blur(30px);
+    transition: width var(--transition-smooth);
+    position: relative;
+    z-index: 10;
+  }
+
+  .nova-main {
+    flex: 1;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+  }
+
+  .nova-header {
+    height: 64px;
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: rgba(6, 12, 20, 0.6);
+    border-bottom: 1px solid var(--border-subtle);
+    backdrop-filter: blur(20px);
+    position: relative;
+    z-index: 5;
+  }
+
+  .nova-content {
+    flex: 1;
+    padding: 24px;
+    overflow-y: auto;
+  }
+
+  /* ============================================
+     TOOLTIP
+     ============================================ */
+  .nova-tooltip {
+    position: absolute;
+    left: calc(100% + 12px);
+    top: 50%;
+    transform: translateY(-50%);
+    background: var(--bg-card);
+    border: 1px solid var(--border-glow);
+    border-radius: 6px;
+    padding: 4px 10px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.75rem;
+    color: var(--text-primary);
+    white-space: nowrap;
+    pointer-events: none;
+    z-index: 100;
+    box-shadow: var(--glow-purple);
+  }
+
+  /* ============================================
+     PRIORITY COLORS
+     ============================================ */
+  .priority-low { color: var(--nova-green); }
+  .priority-medium { color: var(--nova-yellow); }
+  .priority-high { color: var(--nova-red); }
+
+  /* ============================================
+     ANIMATED GRADIENT BORDER
+     ============================================ */
+  .nova-gradient-border {
+    position: relative;
+    border-radius: 12px;
+  }
+
+  .nova-gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: -1px;
+    border-radius: 13px;
+    background: linear-gradient(135deg, var(--nova-purple), var(--nova-blue), var(--nova-cyan));
+    z-index: -1;
+    animation: borderRotate 4s linear infinite;
+    opacity: 0.6;
+  }
+
+  /* ============================================
+     SEPARATOR
+     ============================================ */
+  .nova-separator {
+    height: 1px;
+    background: linear-gradient(90deg, transparent, var(--border-subtle), transparent);
+    margin: 8px 0;
+  }
+
+  /* ============================================
+     SCROLLABLE AREA
+     ============================================ */
+  .nova-scroll {
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: thin;
+    scrollbar-color: var(--border-glow) transparent;
+  }
+
+  /* ============================================
+     CODE BLOCK
+     ============================================ */
+  .nova-code {
+    background: rgba(0, 0, 0, 0.5);
+    border: 1px solid var(--border-subtle);
+    border-left: 3px solid var(--nova-cyan);
+    border-radius: 6px;
+    padding: 12px 16px;
+    font-family: 'JetBrains Mono', monospace;
+    font-size: 0.82rem;
+    color: var(--text-code);
+    line-height: 1.6;
+    overflow-x: auto;
+  }
+
+  /* ============================================
+     PROGRESS BAR
+     ============================================ */
+  .nova-progress {
+    width: 100%;
+    height: 4px;
+    background: var(--bg-card-hover);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .nova-progress-fill {
+    height: 100%;
+    border-radius: 2px;
+    background: linear-gradient(90deg, var(--nova-purple-dim), var(--nova-purple));
+    box-shadow: 0 0 8px rgba(168, 85, 247, 0.6);
+    transition: width var(--transition-smooth);
+  }
+
+  /* ============================================
+     TAG / CHIP
+     ============================================ */
+  .nova-chip {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    background: var(--bg-glass-light);
+    border: 1px solid var(--border-subtle);
+    border-radius: 20px;
+    font-size: 0.75rem;
+    font-family: 'JetBrains Mono', monospace;
+    color: var(--text-secondary);
+    transition: all var(--transition-fast);
+  }
+
+  .nova-chip:hover {
+    border-color: var(--border-glow);
+    color: var(--text-primary);
+    background: rgba(168, 85, 247, 0.08);
+  }
 }
 
-html,
-body,
-#root{
-  width:100%;
-  height:100%;
+/* ============================================
+   KEYFRAME ANIMATIONS
+   ============================================ */
+@keyframes twinkle {
+  0% { opacity: 0.6; }
+  50% { opacity: 1; }
+  100% { opacity: 0.7; }
 }
 
-body{
+@keyframes moonPulse {
+  0%, 100% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.6), 0 0 80px rgba(168, 85, 247, 0.2); }
+  50% { box-shadow: 0 0 50px rgba(168, 85, 247, 0.8), 0 0 120px rgba(168, 85, 247, 0.35); }
+}
 
-  background:var(--bg);
+@keyframes float {
+  0% { transform: translateY(100vh) rotate(0deg); opacity: 0; }
+  10% { opacity: 1; }
+  90% { opacity: 1; }
+  100% { transform: translateY(-100px) rotate(720deg); opacity: 0; }
+}
 
-  color:white;
+@keyframes borderRotate {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
 
-  overflow:hidden;
+@keyframes pulse-glow {
+  0%, 100% { box-shadow: 0 0 10px rgba(168, 85, 247, 0.4); }
+  50% { box-shadow: 0 0 30px rgba(168, 85, 247, 0.7), 0 0 60px rgba(168, 85, 247, 0.3); }
+}
 
-  font-family:"Space Grotesk",sans-serif;
+@keyframes scanline {
+  0% { transform: translateY(-100%); }
+  100% { transform: translateY(100%); }
+}
 
-  -webkit-font-smoothing:antialiased;
+@keyframes blink {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0; }
+}
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Utility Animations */
+.animate-pulse-glow { animation: pulse-glow 2s ease-in-out infinite; }
+.animate-blink { animation: blink 1s step-end infinite; }
+.animate-fade-in-up { animation: fadeInUp 0.4s ease-out forwards; }
+
+/* Shimmer Skeleton */
+.nova-skeleton {
+  background: linear-gradient(90deg, var(--bg-card) 25%, var(--bg-card-hover) 50%, var(--bg-card) 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+  border-radius: 6px;
+}
+
+/* Cursor Blink for Terminal */
+.terminal-cursor::after {
+  content: '█';
+  animation: blink 1s step-end infinite;
+  color: var(--nova-green);
+  margin-left: 2px;
 }
