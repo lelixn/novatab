@@ -6,11 +6,14 @@ import { generateId } from '@shared/utils';
 interface TodoStore {
   todos: Todo[];
   addTodo: (todo: Omit<Todo, 'id' | 'createdAt' | 'updatedAt' | 'order'>) => void;
+  restoreTodo: (todo: Todo) => void;
   updateTodo: (id: string, updates: Partial<Todo>) => void;
   deleteTodo: (id: string) => void;
   toggleTodo: (id: string) => void;
   reorderTodos: (todos: Todo[]) => void;
   clearCompleted: () => void;
+  deleteBulk: (ids: string[]) => void;
+  completeBulk: (ids: string[], completed: boolean) => void;
 }
 
 export const useTodoStore = create<TodoStore>()(
@@ -28,6 +31,8 @@ export const useTodoStore = create<TodoStore>()(
           };
           return { todos: [...state.todos, newTodo] };
         }),
+      restoreTodo: (todo) =>
+        set((state) => ({ todos: [...state.todos, todo] })),
       updateTodo: (id, updates) =>
         set((state) => ({
           todos: state.todos.map((t) =>
@@ -45,6 +50,14 @@ export const useTodoStore = create<TodoStore>()(
       reorderTodos: (todos) => set({ todos }),
       clearCompleted: () =>
         set((state) => ({ todos: state.todos.filter((t) => !t.completed) })),
+      deleteBulk: (ids) =>
+        set((state) => ({ todos: state.todos.filter((t) => !ids.includes(t.id)) })),
+      completeBulk: (ids, completed) =>
+        set((state) => ({
+          todos: state.todos.map((t) =>
+            ids.includes(t.id) ? { ...t, completed, updatedAt: new Date().toISOString() } : t
+          ),
+        })),
     }),
     {
       name: 'nova-todos',
