@@ -1,5 +1,4 @@
-// Chrome Storage API helpers for Chrome Extension
-// Falls back to localStorage when running outside extension context
+
 
 const isChromeExtension = (): boolean =>
   typeof chrome !== 'undefined' && !!chrome?.storage?.local;

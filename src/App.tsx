@@ -5,6 +5,7 @@ import { NovaBackground } from '@shared/components/NovaBackground';
 import { Sidebar } from '@shared/components/Sidebar';
 import { Header } from '@shared/components/Header';
 import { ToastContainer } from '@shared/components/ToastContainer';
+import { Footer } from '@shared/components/Footer';
 import { UniversalSearch } from '@features/search/components/UniversalSearch';
 import { useUIStore, useSettingsStore } from '@store/index';
 import type { NavView } from '@shared/types';
@@ -153,6 +154,9 @@ const App: React.FC = () => {
               </AnimatePresence>
             </Suspense>
           </div>
+
+          {/* Footer */}
+          {!focusMode && <Footer />}
         </main>
       </div>
     </QueryClientProvider>

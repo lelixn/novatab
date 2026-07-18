@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, memo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   RefreshCw,
@@ -6,23 +6,23 @@ import {
   Timer,
   Terminal,
   Bookmark,
-  Github,
-  Code2,
   Music,
   Play,
   Pause,
   Volume2,
-  Loader2,
   ExternalLink,
   Target,
   Clock,
+  Github,
+  Code2,
 } from 'lucide-react';
 import { useTodoStore } from '@features/todo/store/todoStore';
 import { usePomodoroStore } from '@features/pomodoro/store/pomodoroStore';
-import { useSnippetStore } from '@features/terminal/components/TerminalPage';
-import { useBookmarkStore } from '@features/bookmarks/components/BookmarksPage';
+import { useSnippetStore } from '@features/terminal/store/snippetStore';
+import { useBookmarkStore } from '@features/bookmarks/store/bookmarkStore';
 import { useSettingsStore, useUIStore } from '@store/index';
 import { formatTime, getFaviconUrl } from '@shared/utils';
+import { Widget, WidgetHeader, WidgetBody, WidgetFooter } from '@shared/components/Widget';
 import type { MusicStation } from '@shared/types';
 
 // ============================================
@@ -39,232 +39,352 @@ const QUOTES = [
   { text: 'Perfection is achieved not when there is nothing more to add, but when there is nothing left to take away.', author: 'Antoine de Saint-Exupéry' },
 ];
 
-const QuoteWidget: React.FC = () => {
+const QuoteWidget: React.FC = memo(() => {
   const [quoteIdx, setQuoteIdx] = useState(() => new Date().getDate() % QUOTES.length);
   const quote = QUOTES[quoteIdx];
 
   return (
-    <div className="nova-card" style={{ padding: '20px', gridColumn: 'span 2' }}>
-      <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
-        <div
-          style={{
-            fontFamily: 'Pixelify Sans, monospace',
-            fontSize: '2.5rem',
-            color: 'var(--nova-purple)',
-            lineHeight: 0.8,
-            opacity: 0.4,
-            flexShrink: 0,
-          }}
-        >
-          "
+    <Widget glow style={{ gridColumn: 'span 2' }}>
+      <WidgetBody>
+        <div style={{ display: 'flex', alignItems: 'flex-start', gap: 16 }}>
+          <div
+            style={{
+              fontFamily: 'Pixelify Sans, monospace',
+              fontSize: '2.5rem',
+              color: 'var(--accent)',
+              lineHeight: 0.8,
+              opacity: 0.3,
+              flexShrink: 0,
+            }}
+          >
+            "
+          </div>
+          <div style={{ flex: 1 }}>
+            <AnimatePresence mode="wait">
+              <motion.div
+                key={quoteIdx}
+                initial={{ opacity: 0, y: 6 }}
+                animate={{ opacity: 1, y: 0 }}
+                exit={{ opacity: 0, y: -6 }}
+                transition={{ duration: 0.25 }}
+              >
+                <p style={{ fontSize: '0.88rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 8, fontStyle: 'italic' }}>
+                  {quote.text}
+                </p>
+                <p className="font-mono" style={{ fontSize: '0.7rem', color: 'var(--accent)' }}>
+                  — {quote.author}
+                </p>
+              </motion.div>
+            </AnimatePresence>
+          </div>
+          <motion.button
+            onClick={() => setQuoteIdx((i) => (i + 1) % QUOTES.length)}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
+            whileHover={{ rotate: 180, color: 'var(--accent)' }}
+            transition={{ duration: 0.3 }}
+          >
+            <RefreshCw size={14} />
+          </motion.button>
         </div>
-        <div style={{ flex: 1 }}>
-          <AnimatePresence mode="wait">
-            <motion.div
-              key={quoteIdx}
-              initial={{ opacity: 0, y: 8 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -8 }}
-              transition={{ duration: 0.3 }}
-            >
-              <p style={{ fontSize: '0.9rem', color: 'var(--text-secondary)', lineHeight: 1.6, marginBottom: 8, fontStyle: 'italic' }}>
-                {quote.text}
-              </p>
-              <p className="font-mono" style={{ fontSize: '0.72rem', color: 'var(--nova-purple)' }}>
-                — {quote.author}
-              </p>
-            </motion.div>
-          </AnimatePresence>
-        </div>
-        <motion.button
-          onClick={() => setQuoteIdx((i) => (i + 1) % QUOTES.length)}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', padding: 4 }}
-          whileHover={{ rotate: 180, color: 'var(--nova-purple)' }}
-          transition={{ duration: 0.3 }}
-        >
-          <RefreshCw size={15} />
-        </motion.button>
-      </div>
-    </div>
+      </WidgetBody>
+    </Widget>
   );
-};
+});
+
+QuoteWidget.displayName = 'QuoteWidget';
 
 // ============================================
 // Todo Summary Widget
 // ============================================
-const TodoWidget: React.FC = () => {
+const TodoWidget: React.FC = memo(() => {
   const { todos } = useTodoStore();
   const { setActiveView } = useUIStore();
   const active = todos.filter((t) => !t.completed);
   const completed = todos.filter((t) => t.completed);
   const pct = todos.length > 0 ? (completed.length / todos.length) * 100 : 0;
 
+  // Mini progress ring constants
+  const size = 52;
+  const strokeW = 4;
+  const r = (size - strokeW * 2) / 2;
+  const circ = 2 * Math.PI * r;
+  const offset = circ - (pct / 100) * circ;
+
   return (
-    <div
-      className="nova-card"
-      style={{ padding: '18px', cursor: 'pointer' }}
-      onClick={() => setActiveView('tasks')}
-    >
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <CheckSquare size={16} color="var(--nova-cyan)" />
-          <span className="font-pixel" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', letterSpacing: '0.06em' }}>TASKS</span>
-        </div>
-        <span className="font-mono" style={{ fontSize: '0.72rem', color: 'var(--nova-cyan)' }}>{todos.length} total</span>
-      </div>
-
-      <div className="font-mono" style={{ fontSize: '1.6rem', fontWeight: 600, color: 'var(--nova-cyan)', marginBottom: 4 }}>
-        {active.length}
-      </div>
-      <div style={{ fontSize: '0.75rem', color: 'var(--text-muted)', marginBottom: 12 }}>tasks remaining</div>
-
-      <div className="nova-progress">
-        <motion.div className="nova-progress-fill" style={{ background: 'linear-gradient(90deg, #0891b2, #06b6d4)' }}
-          initial={{ width: 0 }} animate={{ width: `${pct}%` }} transition={{ duration: 0.6 }} />
-      </div>
-      <div className="font-mono" style={{ fontSize: '0.65rem', color: 'var(--text-muted)', marginTop: 4, textAlign: 'right' }}>
-        {Math.round(pct)}% done
-      </div>
-
-      {/* Recent tasks */}
-      <div style={{ marginTop: 12, display: 'flex', flexDirection: 'column', gap: 5 }}>
-        {active.slice(0, 3).map((t) => (
-          <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <div style={{ width: 5, height: 5, borderRadius: '50%', background: t.priority === 'high' ? 'var(--nova-red)' : t.priority === 'medium' ? 'var(--nova-yellow)' : 'var(--nova-green)', flexShrink: 0 }} />
-            <span style={{ fontSize: '0.75rem', color: 'var(--text-secondary)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</span>
+    <Widget onClick={() => setActiveView('tasks')}>
+      <WidgetHeader
+        title="Tasks Matrix"
+        icon={<CheckSquare size={13} />}
+        iconColor="var(--nova-cyan)"
+        badge={`${todos.length} total`}
+        badgeColor="var(--nova-cyan)"
+      />
+      <WidgetBody>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div>
+            <div className="font-mono" style={{ fontSize: '1.8rem', fontWeight: 600, color: 'var(--nova-cyan)', lineHeight: 1.1 }}>
+              {active.length}
+            </div>
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', marginTop: 2 }}>tasks remaining</div>
           </div>
-        ))}
-      </div>
-    </div>
+
+          {/* Mini circular progress */}
+          <div style={{ position: 'relative', width: size, height: size }}>
+            <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+              <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(6,182,212,0.08)" strokeWidth={strokeW} />
+              <motion.circle
+                cx={size/2} cy={size/2} r={r} fill="none" stroke="var(--nova-cyan)" strokeWidth={strokeW}
+                strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
+                initial={{ strokeDashoffset: circ }}
+                animate={{ strokeDashoffset: offset }}
+                transition={{ duration: 0.6 }}
+              />
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.68rem', fontFamily: 'JetBrains Mono', color: 'var(--nova-cyan)', fontWeight: 600 }}>
+              {Math.round(pct)}%
+            </div>
+          </div>
+        </div>
+
+        {/* Recent tasks preview */}
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {active.length === 0 ? (
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '4px 0' }}>
+              ✓ All tasks completed
+            </div>
+          ) : (
+            active.slice(0, 3).map((t) => (
+              <div key={t.id} style={{ display: 'flex', alignItems: 'center', gap: 8, minWidth: 0 }}>
+                <div style={{
+                  width: 5,
+                  height: 5,
+                  borderRadius: '50%',
+                  background: t.priority === 'high' ? 'var(--nova-red)' : t.priority === 'medium' ? 'var(--nova-yellow)' : 'var(--nova-green)',
+                  boxShadow: `0 0 4px ${t.priority === 'high' ? 'var(--nova-red)' : t.priority === 'medium' ? 'var(--nova-yellow)' : 'var(--nova-green)'}`,
+                  flexShrink: 0,
+                }} />
+                <span style={{
+                  fontSize: '0.78rem',
+                  color: 'var(--text-secondary)',
+                  overflow: 'hidden',
+                  textOverflow: 'ellipsis',
+                  whiteSpace: 'nowrap',
+                }}>
+                  {t.title}
+                </span>
+              </div>
+            ))
+          )}
+        </div>
+      </WidgetBody>
+    </Widget>
   );
-};
+});
+
+TodoWidget.displayName = 'TodoWidget';
 
 // ============================================
-// Pomodoro Widget
+// Pomodoro Summary Widget
 // ============================================
-const PomodoroWidget: React.FC = () => {
+const PomodoroWidget: React.FC = memo(() => {
   const { timeLeft, isRunning, mode, stats, setRunning } = usePomodoroStore();
   const { setActiveView } = useUIStore();
 
   const modeColors = { focus: 'var(--nova-purple)', short_break: 'var(--nova-green)', long_break: 'var(--nova-cyan)' };
   const color = modeColors[mode];
 
+  // Circular ring details
+  const size = 52;
+  const strokeW = 4;
+  const r = (size - strokeW * 2) / 2;
+  const circ = 2 * Math.PI * r;
+  // Focus is 25m, break is 5m/15m
+  const total = mode === 'focus' ? 25 * 60 : mode === 'short_break' ? 5 * 60 : 15 * 60;
+  const pct = total > 0 ? ((total - timeLeft) / total) * 100 : 0;
+  const offset = circ - (pct / 100) * circ;
+
   return (
-    <div className="nova-card" style={{ padding: '18px', cursor: 'pointer' }} onClick={() => setActiveView('pomodoro')}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Timer size={16} color={color} />
-          <span className="font-pixel" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', letterSpacing: '0.06em' }}>POMODORO</span>
-        </div>
-        <motion.button
-          onClick={(e) => { e.stopPropagation(); setRunning(!isRunning); }}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color }}
-          whileHover={{ scale: 1.1 }}
-          whileTap={{ scale: 0.9 }}
-        >
-          {isRunning ? <Pause size={16} /> : <Play size={16} />}
-        </motion.button>
-      </div>
+    <Widget onClick={() => setActiveView('pomodoro')}>
+      <WidgetHeader
+        title="Pomodoro Deck"
+        icon={<Timer size={13} />}
+        iconColor={color}
+        actions={
+          <motion.button
+            onClick={(e) => { e.stopPropagation(); setRunning(!isRunning); }}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color }}
+            whileHover={{ scale: 1.1 }}
+            whileTap={{ scale: 0.9 }}
+          >
+            {isRunning ? <Pause size={14} /> : <Play size={14} />}
+          </motion.button>
+        }
+      />
+      <WidgetBody>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 }}>
+          <div>
+            <div className="font-mono" style={{ fontSize: '1.8rem', fontWeight: 300, color, textShadow: `0 0 15px ${color}40`, lineHeight: 1.1 }}>
+              {formatTime(timeLeft)}
+            </div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
+              <div style={{
+                width: 5,
+                height: 5,
+                borderRadius: '50%',
+                background: color,
+                boxShadow: `0 0 6px ${color}`,
+                animation: isRunning ? 'dotPulse 1.5s ease-in-out infinite' : 'none'
+              }} />
+              <span className="font-pixel" style={{ fontSize: '0.58rem', color: 'var(--text-muted)', letterSpacing: '0.08em' }}>
+                {mode === 'focus' ? 'FOCUS' : mode === 'short_break' ? 'SHORT BREAK' : 'LONG BREAK'}
+              </span>
+            </div>
+          </div>
 
-      <div className="font-mono" style={{ fontSize: '2rem', fontWeight: 300, color, textShadow: `0 0 20px ${color}60`, marginBottom: 4 }}>
-        {formatTime(timeLeft)}
-      </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 12 }}>
-        <div style={{ width: 6, height: 6, borderRadius: '50%', background: color, boxShadow: `0 0 6px ${color}`, animation: isRunning ? 'pulse-glow 1.5s ease-in-out infinite' : 'none' }} />
-        <span className="font-pixel" style={{ fontSize: '0.6rem', color: 'var(--text-muted)', letterSpacing: '0.08em' }}>
-          {mode === 'focus' ? 'FOCUSING' : mode === 'short_break' ? 'SHORT BREAK' : 'LONG BREAK'}
-        </span>
-      </div>
+          {/* Mini progress ring */}
+          <div style={{ position: 'relative', width: size, height: size }}>
+            <svg width={size} height={size} style={{ transform: 'rotate(-90deg)' }}>
+              <circle cx={size/2} cy={size/2} r={r} fill="none" stroke="rgba(255,255,255,0.04)" strokeWidth={strokeW} />
+              <motion.circle
+                cx={size/2} cy={size/2} r={r} fill="none" stroke={color} strokeWidth={strokeW}
+                strokeLinecap="round" strokeDasharray={circ} strokeDashoffset={offset}
+                animate={{ strokeDashoffset: offset }}
+                transition={{ duration: 0.5 }}
+              />
+            </svg>
+            <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '0.58rem', fontFamily: 'JetBrains Mono', color: 'var(--text-muted)' }}>
+              {stats.todaySessions}d
+            </div>
+          </div>
+        </div>
 
-      <div style={{ display: 'flex', gap: 12 }}>
-        <div>
-          <div className="font-mono" style={{ fontSize: '1rem', fontWeight: 600, color }}>{stats.todaySessions}</div>
-          <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>today</div>
+        <div style={{ display: 'flex', gap: 14 }}>
+          <div>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>focus time</span>
+            <div className="font-mono" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--text-secondary)', marginTop: 1 }}>
+              {Math.round(stats.totalFocusTime / 60)}m
+            </div>
+          </div>
+          <div>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>current streak</span>
+            <div className="font-mono" style={{ fontSize: '0.85rem', fontWeight: 600, color: 'var(--nova-red)', marginTop: 1 }}>
+              {stats.currentStreak} 🔥
+            </div>
+          </div>
         </div>
-        <div>
-          <div className="font-mono" style={{ fontSize: '1rem', fontWeight: 600, color: 'var(--nova-red)' }}>{stats.currentStreak}🔥</div>
-          <div style={{ fontSize: '0.65rem', color: 'var(--text-muted)' }}>streak</div>
-        </div>
-      </div>
-    </div>
+      </WidgetBody>
+    </Widget>
   );
-};
+});
+
+PomodoroWidget.displayName = 'PomodoroWidget';
 
 // ============================================
 // Quick Bookmarks Widget
 // ============================================
-const BookmarksWidget: React.FC = () => {
+const BookmarksWidget: React.FC = memo(() => {
   const { bookmarks } = useBookmarkStore();
   const { setActiveView } = useUIStore();
   const [imgErrors, setImgErrors] = useState<Set<string>>(new Set());
 
   return (
-    <div className="nova-card" style={{ padding: '18px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Bookmark size={16} color="var(--nova-pink)" />
-          <span className="font-pixel" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', letterSpacing: '0.06em' }}>BOOKMARKS</span>
-        </div>
-        <motion.button
-          onClick={() => setActiveView('bookmarks')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.7rem', fontFamily: 'JetBrains Mono' }}
-          whileHover={{ color: 'var(--nova-pink)' }}
-        >
-          View all
-        </motion.button>
-      </div>
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
-        {bookmarks.slice(0, 8).map((b) => {
-          const favicon = b.favicon ?? getFaviconUrl(b.url);
-          return (
-            <motion.a
-              key={b.id}
-              href={b.url}
-              target="_blank"
-              rel="noreferrer"
-              title={b.title}
-              whileHover={{ scale: 1.08, backgroundColor: 'var(--bg-card-hover)' }}
-              whileTap={{ scale: 0.95 }}
-              style={{
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 5,
-                padding: '10px 6px',
-                borderRadius: 8,
-                background: 'var(--bg-glass-light)',
-                border: '1px solid var(--border-subtle)',
-                textDecoration: 'none',
-                transition: 'all 150ms',
-              }}
-            >
-              <div style={{ width: 22, height: 22, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                {!imgErrors.has(b.id) ? (
-                  <img src={favicon} alt="" width={16} height={16} onError={() => setImgErrors(new Set([...imgErrors, b.id]))} />
-                ) : (
-                  <ExternalLink size={12} color="var(--text-muted)" />
-                )}
-              </div>
-              <span style={{ fontSize: '0.6rem', color: 'var(--text-muted)', textAlign: 'center', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap', width: '100%' }}>
-                {b.title}
-              </span>
-            </motion.a>
-          );
-        })}
-      </div>
-    </div>
+    <Widget>
+      <WidgetHeader
+        title="Bookmarks Grid"
+        icon={<Bookmark size={13} />}
+        iconColor="var(--nova-pink)"
+        actions={
+          <motion.button
+            onClick={() => setActiveView('bookmarks')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.65rem', fontFamily: 'JetBrains Mono' }}
+            whileHover={{ color: 'var(--nova-pink)' }}
+          >
+            View all
+          </motion.button>
+        }
+      />
+      <WidgetBody>
+        {bookmarks.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '12px 0' }}>
+            <span style={{ fontSize: '1.2rem', marginBottom: 4 }}>📌</span>
+            <span style={{ fontSize: '0.72rem', color: 'var(--text-muted)' }}>No bookmarks loaded</span>
+          </div>
+        ) : (
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
+            {bookmarks.slice(0, 8).map((b) => {
+              const favicon = b.favicon ?? getFaviconUrl(b.url);
+              return (
+                <motion.a
+                  key={b.id}
+                  href={b.url}
+                  target="_blank"
+                  rel="noreferrer"
+                  title={b.title}
+                  whileHover={{ scale: 1.05, borderColor: 'var(--nova-pink-dim)', backgroundColor: 'var(--bg-glass-hover)' }}
+                  whileTap={{ scale: 0.95 }}
+                  style={{
+                    display: 'flex',
+                    flexDirection: 'column',
+                    alignItems: 'center',
+                    gap: 6,
+                    padding: '8px 4px',
+                    borderRadius: 8,
+                    background: 'rgba(0,0,0,0.15)',
+                    border: '1px solid var(--border-subtle)',
+                    textDecoration: 'none',
+                    transition: 'border-color 150ms ease, background-color 150ms ease',
+                  }}
+                >
+                  <div style={{ width: 18, height: 18, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    {!imgErrors.has(b.id) ? (
+                      <img
+                        src={favicon}
+                        alt=""
+                        width={14}
+                        height={14}
+                        onError={() => setImgErrors((prev) => {
+                          const next = new Set(prev);
+                          next.add(b.id);
+                          return next;
+                        })}
+                      />
+                    ) : (
+                      <ExternalLink size={10} color="var(--text-muted)" />
+                    )}
+                  </div>
+                  <span style={{
+                    fontSize: '0.62rem',
+                    color: 'var(--text-secondary)',
+                    textAlign: 'center',
+                    overflow: 'hidden',
+                    textOverflow: 'ellipsis',
+                    whiteSpace: 'nowrap',
+                    width: '100%',
+                    padding: '0 2px',
+                  }}>
+                    {b.title}
+                  </span>
+                </motion.a>
+              );
+            })}
+          </div>
+        )}
+      </WidgetBody>
+    </Widget>
   );
-};
+});
+
+BookmarksWidget.displayName = 'BookmarksWidget';
 
 // ============================================
 // Terminal Quick Access Widget
 // ============================================
-const TerminalWidget: React.FC = () => {
+const TerminalWidget: React.FC = memo(() => {
   const { snippets } = useSnippetStore();
   const { setActiveView } = useUIStore();
   const [copiedId, setCopiedId] = useState<string | null>(null);
 
-  const favorites = snippets.filter((s) => s.isFavorite).slice(0, 4);
+  const favorites = snippets.filter((s) => s.isFavorite).slice(0, 3);
 
   const copy = async (id: string, cmd: string) => {
     await navigator.clipboard.writeText(cmd);
@@ -273,52 +393,63 @@ const TerminalWidget: React.FC = () => {
   };
 
   return (
-    <div className="nova-card" style={{ padding: '18px', cursor: 'default' }}>
-      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 14 }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <Terminal size={16} color="var(--nova-green)" />
-          <span className="font-pixel" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', letterSpacing: '0.06em' }}>QUICK SNIPPETS</span>
-        </div>
-        <motion.button
-          onClick={() => setActiveView('terminal')}
-          style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.7rem', fontFamily: 'JetBrains Mono' }}
-          whileHover={{ color: 'var(--nova-green)' }}
-        >
-          View all
-        </motion.button>
-      </div>
-      <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-        {favorites.map((s) => (
-          <motion.div
-            key={s.id}
-            onClick={() => copy(s.id, s.command)}
-            whileHover={{ borderColor: 'rgba(16,185,129,0.4)', backgroundColor: 'rgba(16,185,129,0.04)' }}
-            style={{
-              display: 'flex',
-              alignItems: 'center',
-              gap: 10,
-              padding: '8px 10px',
-              background: 'rgba(0,0,0,0.3)',
-              border: '1px solid var(--border-subtle)',
-              borderLeft: '2px solid var(--nova-green)',
-              borderRadius: 6,
-              cursor: 'pointer',
-              transition: 'all 150ms',
-            }}
+    <Widget>
+      <WidgetHeader
+        title="Developer Snippets"
+        icon={<Terminal size={13} />}
+        iconColor="var(--nova-green)"
+        actions={
+          <motion.button
+            onClick={() => setActiveView('terminal')}
+            style={{ background: 'none', border: 'none', cursor: 'pointer', color: 'var(--text-muted)', fontSize: '0.65rem', fontFamily: 'JetBrains Mono' }}
+            whileHover={{ color: 'var(--nova-green)' }}
           >
-            <span style={{ color: 'var(--nova-green)', fontFamily: 'JetBrains Mono', fontSize: '0.7rem' }}>$</span>
-            <span className="font-mono" style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-              {s.command}
-            </span>
-            <span style={{ fontSize: '0.62rem', color: copiedId === s.id ? 'var(--nova-green)' : 'var(--text-muted)', fontFamily: 'JetBrains Mono', flexShrink: 0 }}>
-              {copiedId === s.id ? '✓ copied' : 'click to copy'}
-            </span>
-          </motion.div>
-        ))}
-      </div>
-    </div>
+            View all
+          </motion.button>
+        }
+      />
+      <WidgetBody>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          {favorites.length === 0 ? (
+            <div style={{ fontSize: '0.72rem', color: 'var(--text-muted)', fontStyle: 'italic', padding: '6px 0', textAlign: 'center' }}>
+              No snippets marked as favorite yet
+            </div>
+          ) : (
+            favorites.map((s) => (
+              <motion.div
+                key={s.id}
+                onClick={() => copy(s.id, s.command)}
+                whileHover={{ borderColor: 'rgba(16,185,129,0.3)', backgroundColor: 'rgba(16,185,129,0.05)' }}
+                style={{
+                  display: 'flex',
+                  alignItems: 'center',
+                  gap: 10,
+                  padding: '6px 10px',
+                  background: 'rgba(0,0,0,0.2)',
+                  border: '1px solid var(--border-subtle)',
+                  borderLeft: '2px solid var(--nova-green)',
+                  borderRadius: 6,
+                  cursor: 'pointer',
+                  transition: 'all 120ms ease',
+                }}
+              >
+                <span style={{ color: 'var(--nova-green)', fontFamily: 'JetBrains Mono', fontSize: '0.65rem', fontWeight: 600 }}>$</span>
+                <span className="font-mono" style={{ fontSize: '0.72rem', color: 'var(--text-secondary)', flex: 1, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  {s.command}
+                </span>
+                <span style={{ fontSize: '0.6rem', color: copiedId === s.id ? 'var(--nova-green)' : 'var(--text-muted)', fontFamily: 'JetBrains Mono', flexShrink: 0 }}>
+                  {copiedId === s.id ? '✓ copied' : 'copy'}
+                </span>
+              </motion.div>
+            ))
+          )}
+        </div>
+      </WidgetBody>
+    </Widget>
   );
-};
+});
+
+TerminalWidget.displayName = 'TerminalWidget';
 
 // ============================================
 // LoFi Music Widget
@@ -329,11 +460,11 @@ const STATIONS: MusicStation[] = [
   { id: 'lofi3', name: 'Deep Focus', genre: 'focus', streamUrl: 'https://stream.nightride.fm/spacesynth.m4a', thumbnail: '🚀' },
 ];
 
-const MusicWidget: React.FC = () => {
+const MusicWidget: React.FC = memo(() => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [volume, setVolume] = useState(0.5);
   const [currentStation, setCurrentStation] = useState(STATIONS[0]);
-  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const audioRef = useRef<HTMLAudioElement | null>(null);
 
   const togglePlay = () => {
     if (!audioRef.current) {
@@ -348,121 +479,135 @@ const MusicWidget: React.FC = () => {
     setIsPlaying(!isPlaying);
   };
 
-  React.useEffect(() => {
+  useEffect(() => {
     if (audioRef.current) audioRef.current.volume = volume;
   }, [volume]);
 
+  // Clean up on unmount
+  useEffect(() => {
+    return () => {
+      if (audioRef.current) {
+        audioRef.current.pause();
+        audioRef.current = null;
+      }
+    };
+  }, []);
+
   return (
-    <div className="nova-card" style={{ padding: '18px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 14 }}>
-        <Music size={16} color="var(--nova-pink)" />
-        <span className="font-pixel" style={{ fontSize: '0.72rem', color: 'var(--text-muted)', letterSpacing: '0.06em' }}>LOFI RADIO</span>
-      </div>
+    <Widget>
+      <WidgetHeader
+        title="Lofi Station"
+        icon={<Music size={13} />}
+        iconColor="var(--nova-pink)"
+      />
+      <WidgetBody>
+        {/* Station Selector */}
+        <div style={{ display: 'flex', gap: 4, marginBottom: 12 }}>
+          {STATIONS.map((s) => (
+            <motion.button
+              key={s.id}
+              onClick={() => {
+                setCurrentStation(s);
+                if (audioRef.current) {
+                  audioRef.current.src = s.streamUrl;
+                  if (isPlaying) audioRef.current.play().catch(() => {});
+                }
+              }}
+              whileHover={{ scale: 1.02 }}
+              style={{
+                flex: 1,
+                padding: '4px 2px',
+                borderRadius: 6,
+                border: `1px solid ${currentStation.id === s.id ? 'rgba(236,72,153,0.4)' : 'var(--border-subtle)'}`,
+                background: currentStation.id === s.id ? 'rgba(236,72,153,0.08)' : 'transparent',
+                cursor: 'pointer',
+                fontSize: '0.62rem',
+                fontFamily: 'JetBrains Mono',
+                color: currentStation.id === s.id ? 'var(--nova-pink)' : 'var(--text-muted)',
+                transition: 'all 120ms ease',
+                textAlign: 'center',
+              }}
+            >
+              {s.thumbnail} {s.name.split(' ')[0]}
+            </motion.button>
+          ))}
+        </div>
 
-      {/* Station selector */}
-      <div style={{ display: 'flex', gap: 5, marginBottom: 14 }}>
-        {STATIONS.map((s) => (
+        {/* Controls */}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
           <motion.button
-            key={s.id}
-            onClick={() => {
-              setCurrentStation(s);
-              if (audioRef.current) {
-                audioRef.current.src = s.streamUrl;
-                if (isPlaying) audioRef.current.play().catch(() => {});
-              }
-            }}
-            whileHover={{ scale: 1.04 }}
+            onClick={togglePlay}
             style={{
-              flex: 1,
-              padding: '6px 4px',
-              borderRadius: 6,
-              border: `1px solid ${currentStation.id === s.id ? 'rgba(236,72,153,0.5)' : 'var(--border-subtle)'}`,
-              background: currentStation.id === s.id ? 'rgba(236,72,153,0.1)' : 'transparent',
+              width: 34,
+              height: 34,
+              borderRadius: '50%',
+              background: 'linear-gradient(135deg, var(--nova-pink-dim), var(--nova-pink))',
+              border: 'none',
               cursor: 'pointer',
-              fontSize: '0.65rem',
-              fontFamily: 'JetBrains Mono',
-              color: currentStation.id === s.id ? 'var(--nova-pink)' : 'var(--text-muted)',
-              transition: 'all 150ms',
-              textAlign: 'center',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              flexShrink: 0,
+              boxShadow: isPlaying ? '0 0 15px rgba(236,72,153,0.4)' : 'none',
             }}
+            whileHover={{ scale: 1.05 }}
+            whileTap={{ scale: 0.95 }}
           >
-            {s.thumbnail} {s.name}
+            {isPlaying ? <Pause size={14} color="white" /> : <Play size={14} color="white" style={{ marginLeft: 2 }} />}
           </motion.button>
-        ))}
-      </div>
 
-      {/* Controls */}
-      <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
-        <motion.button
-          onClick={togglePlay}
-          style={{
-            width: 40,
-            height: 40,
-            borderRadius: '50%',
-            background: 'linear-gradient(135deg, #be185d, #ec4899)',
-            border: 'none',
-            cursor: 'pointer',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            flexShrink: 0,
-            boxShadow: isPlaying ? '0 0 20px rgba(236,72,153,0.5)' : 'none',
-          }}
-          whileHover={{ scale: 1.05 }}
-          whileTap={{ scale: 0.95 }}
-        >
-          {isPlaying ? <Pause size={16} color="white" /> : <Play size={16} color="white" />}
-        </motion.button>
-
-        <div style={{ flex: 1 }}>
-          <div style={{ fontSize: '0.8rem', color: 'var(--text-primary)', fontWeight: 500, marginBottom: 2 }}>
-            {currentStation.name}
-          </div>
-          {isPlaying && (
-            <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 16 }}>
-              {[1, 2, 3, 4, 5].map((b) => (
-                <motion.div
-                  key={b}
-                  style={{ width: 3, borderRadius: 2, background: 'var(--nova-pink)' }}
-                  animate={{ height: [4, 8 + b * 2, 4] }}
-                  transition={{ duration: 0.5 + b * 0.1, repeat: Infinity, ease: 'easeInOut', delay: b * 0.1 }}
-                />
-              ))}
+          <div style={{ flex: 1, minWidth: 0 }}>
+            <div style={{ fontSize: '0.78rem', color: 'var(--text-primary)', fontWeight: 500, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+              {currentStation.name}
             </div>
-          )}
-        </div>
+            {isPlaying && (
+              <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 10, marginTop: 4 }}>
+                {[1, 2, 3, 4, 5, 6].map((b) => (
+                  <motion.div
+                    key={b}
+                    style={{ width: 2, borderRadius: 1, background: 'var(--nova-pink)' }}
+                    animate={{ height: [3, 8 + b * 1.5, 3] }}
+                    transition={{ duration: 0.4 + b * 0.08, repeat: Infinity, ease: 'easeInOut', delay: b * 0.05 }}
+                  />
+                ))}
+              </div>
+            )}
+          </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-          <Volume2 size={13} color="var(--text-muted)" />
-          <input
-            type="range"
-            min={0}
-            max={1}
-            step={0.01}
-            value={volume}
-            onChange={(e) => setVolume(parseFloat(e.target.value))}
-            style={{ width: 60, accentColor: 'var(--nova-pink)' }}
-          />
+          <div style={{ display: 'flex', alignItems: 'center', gap: 4, flexShrink: 0 }}>
+            <Volume2 size={11} color="var(--text-muted)" />
+            <input
+              type="range"
+              min={0}
+              max={1}
+              step={0.05}
+              value={volume}
+              onChange={(e) => setVolume(parseFloat(e.target.value))}
+              style={{ width: 50, accentColor: 'var(--nova-pink)', height: 3, cursor: 'pointer' }}
+            />
+          </div>
         </div>
-      </div>
-    </div>
+      </WidgetBody>
+    </Widget>
   );
-};
+});
+
+MusicWidget.displayName = 'MusicWidget';
 
 // ============================================
-// Stats Row Widget
+// Stats Row Widget (Animated Count Ups)
 // ============================================
-const StatsRow: React.FC = () => {
+const StatsRow: React.FC = memo(() => {
   const { todos } = useTodoStore();
   const { stats } = usePomodoroStore();
   const { snippets } = useSnippetStore();
   const { bookmarks } = useBookmarkStore();
 
   const items = [
-    { label: 'Active Tasks', value: todos.filter((t) => !t.completed).length, icon: <CheckSquare size={14} />, color: 'var(--nova-cyan)' },
-    { label: 'Focus Sessions', value: stats.totalFocusSessions, icon: <Target size={14} />, color: 'var(--nova-purple)' },
-    { label: 'Snippets', value: snippets.length, icon: <Terminal size={14} />, color: 'var(--nova-green)' },
-    { label: 'Bookmarks', value: bookmarks.length, icon: <Bookmark size={14} />, color: 'var(--nova-pink)' },
+    { label: 'Active Tasks', value: todos.filter((t) => !t.completed).length, icon: <CheckSquare size={13} />, color: 'var(--nova-cyan)' },
+    { label: 'Focus sessions', value: stats.totalFocusSessions, icon: <Target size={13} />, color: 'var(--nova-purple)' },
+    { label: 'Snippets', value: snippets.length, icon: <Terminal size={13} />, color: 'var(--nova-green)' },
+    { label: 'Bookmarks', value: bookmarks.length, icon: <Bookmark size={13} />, color: 'var(--nova-pink)' },
   ];
 
   return (
@@ -471,24 +616,26 @@ const StatsRow: React.FC = () => {
         <motion.div
           key={item.label}
           className="nova-card"
-          style={{ padding: '14px 16px' }}
+          style={{ padding: '12px 14px', borderLeft: `2px solid ${item.color}` }}
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
-          transition={{ delay: i * 0.05 }}
-          whileHover={{ borderColor: item.color + '50' }}
+          transition={{ delay: i * 0.05, duration: 0.3 }}
+          whileHover={{ borderColor: item.color, boxShadow: `0 4px 12px ${item.color}15` }}
         >
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-            <span style={{ color: item.color }}>{item.icon}</span>
-            <span style={{ fontSize: '0.68rem', color: 'var(--text-muted)', fontFamily: 'JetBrains Mono' }}>{item.label}</span>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+            <span style={{ color: item.color, display: 'flex', alignItems: 'center' }}>{item.icon}</span>
+            <span style={{ fontSize: '0.65rem', color: 'var(--text-muted)', fontFamily: 'JetBrains Mono', textTransform: 'uppercase', letterSpacing: '0.04em' }}>{item.label}</span>
           </div>
-          <div className="font-mono" style={{ fontSize: '1.4rem', fontWeight: 600, color: item.color }}>
+          <div className="font-mono animate-count-up" style={{ fontSize: '1.45rem', fontWeight: 600, color: 'var(--text-primary)', lineHeight: 1.1 }}>
             {item.value}
           </div>
         </motion.div>
       ))}
     </div>
   );
-};
+});
+
+StatsRow.displayName = 'StatsRow';
 
 // ============================================
 // Dashboard Page
@@ -497,7 +644,19 @@ export const DashboardPage: React.FC = () => {
   const { settings } = useSettingsStore();
 
   return (
-    <div style={{ display: 'flex', flexDirection: 'column', gap: 20 }}>
+    <motion.div
+      style={{ display: 'flex', flexDirection: 'column', gap: 16 }}
+      initial="hidden"
+      animate="show"
+      variants={{
+        hidden: {},
+        show: {
+          transition: {
+            staggerChildren: 0.06,
+          },
+        },
+      }}
+    >
       {/* Stats Row */}
       <StatsRow />
 
@@ -505,19 +664,19 @@ export const DashboardPage: React.FC = () => {
       {settings.showQuote && <QuoteWidget />}
 
       {/* Main Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 16 }}>
         <TodoWidget />
         <PomodoroWidget />
       </div>
 
       {/* Bottom Grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 14 }}>
+      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 16 }}>
         <BookmarksWidget />
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 14 }}>
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 16 }}>
           <MusicWidget />
           <TerminalWidget />
         </div>
       </div>
-    </div>
+    </motion.div>
   );
 };
